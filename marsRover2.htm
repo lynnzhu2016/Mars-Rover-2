@@ -1,0 +1,261 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+    <title>Mars Rover</title>
+    <script>
+
+        /************************************
+           1. Grid origin starts from top, left, and the edge is preset to (x:25, y:25). The edge is actually also the position of (x:0, y:0). 
+           This design wraps the edge to make the grid has no end in each x and y coordinates. You can change the grid size in the code at line 17
+           2. The obstacles are preset at position [10, 6], [6, 3], [4, 10]. You can change the obstacleList postions in the code at line 21. 
+           3. You can choose start position from the page. 
+           4. To create a command list, you need to click add button every time when you choose turn value or set move steps. 
+           You can see the command list in the command list textarea. Negative number means move backward
+           3. Example command list: 
+              starting position{0, 0, 'facing south'} and command list ['left', 4, 'right', 10, 28] for obstacle test. This combination should put the Rover at postion (x: 4, y: 9) and facing South. 
+              starting position{0, 0, 'facing south'} and command list ['left', -6, 'right', 28] for wrapping edge test. This combination should put the rover at position (x: 19, y: 3) and facing South. 
+        *************************************/
+        var commandList = [];
+       // var found = false;
+        var grid = {
+            xLength: 25,
+            yLength: 25
+        };
+        var obstacleList = [[10, 6], [6, 3], [4, 10]];
+
+        function Rover(a, b, dir) {
+
+            var _currentPos = {
+                x: a,
+                y: b,
+                facingDir: dir
+            };
+
+            this.move = _move;
+            this.currentPos = _currentPos;
+
+            var found = false;
+
+            function _move(command) {
+                for (var i = 0; i < command.length; i++) {
+                    if (found) return;
+                    if (isNaN(command[i])) turn(command[i]);
+                    else {
+                        if (command[i] < 0) moveForwardBackward(Math.abs(command[i]), 0);  //if the number is negative, forward = false;
+                        else moveForwardBackward(command[i], 1) //if the number is non negative, forward = true;
+                    }
+                }
+            }
+
+            function turn(dir) {
+                if (dir == 'left') turnLeft();
+                else if (dir == 'right') turnRight();
+            }
+
+            function turnLeft() {
+                switch (_currentPos.facingDir) {
+                    case 'e':
+                        _currentPos.facingDir = 'n';
+                        break;
+                    case 's':
+                        _currentPos.facingDir = 'e';
+                        break;
+                    case 'w':
+                        _currentPos.facingDir = 's';
+                        break;
+                    case 'n':
+                        _currentPos.facingDir = 'w';
+                        break;
+                }
+            }
+
+            function turnRight() {
+                switch (_currentPos.facingDir) {
+                    case 'e':
+                        _currentPos.facingDir = 's';
+                        break;
+                    case 's':
+                        _currentPos.facingDir = 'w';
+                        break;
+                    case 'w':
+                        _currentPos.facingDir = 'n';
+                        break;
+                    case 'n':
+                        _currentPos.facingDir = 'e';
+                        break;
+                }
+            }
+
+            function obstacle(x, y) {
+                for (var i = 0; i < obstacleList.length; i++) {
+                    if (x == obstacleList[i][0] && y == obstacleList[i][1]) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            function moveForwardBackward(step, forward) {
+                var x = _currentPos.x;
+                var y = _currentPos.y;
+                switch (_currentPos.facingDir) {
+                    case 'e':
+                        for (var i = 0; i < step; i++) {
+                            if (forward) {  // the grid edge is set to (25, 25), means cell (25, 25) is cell(0, 0).
+                                x = _currentPos.x + 1;
+                                if (x >= grid.xLength) x = x % grid.xLength; // if forward move touches edge 25 in x coordinate, then wrap it. for example, for edge 25, x coordinate is actually 0, and for 26, it's 1
+                            } else {
+                                x = _currentPos.x - 1;
+                                if (x < 0) x = grid.xLength + x; // if backward move touched to edge beyond 0 in x coordinate, then wrap it. for example, for edge -1, x coordinate is actually 24
+                            }
+                            if (obstacle(x, y)) {
+                                found = true;
+                                alert("Found obstacle at position (" + x + ", " + y + ")!");
+                                return;
+                            } else {
+                                _currentPos.x = x;
+                            }
+                        }
+                        break;
+                    case 'w':
+                        for (var i = 0; i < step; i++) {
+                            if (!forward) {  // the grid edge is set to (25, 25), means cell (25, 25) is cell(0, 0).
+                                x = _currentPos.x + 1;
+                                if (x >= grid.xLength) x = x % grid.xLength; // if forward move touches edge 25 in x coordinate, then wrap it. for example, for edge 25, x coordinate is actually 0, and for 26, it's 1
+                            } else {
+                                x = _currentPos.x - 1;
+                                if (x < 0) x = grid.xLength + x; // if backward move touched to edge beyond 0 in x coordinate, then wrap it. for example, for edge -1, x coordinate is actually 24
+                            }
+                            if (obstacle(x, y)) {
+                                found = true;
+                                alert("Found obstacle at position (" + x + ", " + y + ")!");
+                                return;
+                            } else {
+                                _currentPos.x = x;
+                            }
+                        }
+                        break;
+                    case 's':
+                        for (var i = 0; i < step; i++) {
+                            if (forward) {  // the grid edge is set to (25, 25), means cell (25, 25) is cell(0, 0).
+                                y = _currentPos.y + 1;
+                                if (y >= grid.yLength) y = y % grid.yLength; // if forward move touches edge 25 in y coordinate, then wrap it. for example, for edge 25, y coordinate is actually 0, and for 26, it's 1
+                            } else {
+                                y = _currentPos.y - 1;
+                                if (y < 0) y = grid.yLength + y; // if backward move touched to edge beyond 0 in y coordinate, then wrap it. for example, for edge -1, y coordinate is actually 24
+                            }
+                            if (obstacle(x, y)) {
+                                found = true;
+                                alert("Found obstacle at position (" + x + ", " + y + ")!");
+                                return;
+                            } else {
+                                _currentPos.y = y;
+                            }
+                        }
+                        break;
+                    case 'n':
+                        for (var i = 0; i < step; i++) {
+                            if (!forward) {  // the grid edge is set to (25, 25), means cell (25, 25) is cell(0, 0).
+                                y = _currentPos.y + 1;
+                                if (y >= grid.yLength) y = y % grid.yLength; // if forward move touches edge 25 in y coordinate, then wrap it. for example, for edge 25, y coordinate is actually 0, and for 26, it's 1
+                            } else {
+                                y = _currentPos.y - 1;
+                                if (y < 0) y = grid.yLength + y; // if backward move touched to edge beyond 0 in y coordinate, then wrap it. for example, for edge -1, y coordinate is actually 24
+                            }
+                            if (obstacle(x, y)) {
+                                found = true;
+                                alert("Found obstacle at position (" + x + ", " + y + ")!");
+                                return;
+                            } else {
+                                _currentPos.y = y;
+                            }
+                        }
+                        break;
+                }
+            }
+
+        }
+
+        function addStep(forward){
+            if (forward) {
+                var numStep = parseInt(document.getElementById("stepForward").value);
+                commandList.push(numStep);
+            } else {
+                var numStep = parseInt(document.getElementById("stepBackward").value);
+                commandList.push(-numStep);
+            }
+            document.getElementById("commandList").value = commandList.join();
+        }
+
+        function addTurn() {
+            var turn = document.getElementById("turn").value;
+            commandList.push(turn);
+            document.getElementById("commandList").value = commandList.join();
+        }
+
+        function startMove() {
+            var startX = parseInt(document.getElementById("xPositionStart").value);
+            var startY = parseInt(document.getElementById("yPositionStart").value);
+            var startDir = document.getElementById("dirStart").value;
+            var testRover = new Rover(startX, startY, startDir);
+            testRover.move(commandList);
+            var endDir;
+
+            document.getElementById("xPositionEnd").value = testRover.currentPos.x;
+            document.getElementById("yPositionEnd").value = testRover.currentPos.y;
+            switch (testRover.currentPos.facingDir) {
+                case 'e': endDir = "East";
+                    break;
+                case 'w': endDir = "West";
+                    break;
+                case 's': endDir = "South";
+                    break;
+                case 'n': endDir = "North";
+                    break;
+            }
+            document.getElementById("endDir").value = endDir;
+
+            //reset 
+            document.getElementById("xPositionStart").value = "0";
+            document.getElementById("yPositionStart").value = "0";
+            document.getElementById("dirStart").value = "e";
+            document.getElementById("turn").value = "";
+            document.getElementById("stepForward").value = "0";
+            document.getElementById("stepBackward").value = "0";
+            document.getElementById("commandList").value = "";
+            commandList = [];
+        }
+
+</script>
+</head>
+<body>
+<h1>Mars Rover</h1>
+ Start Position x: <input type="text" id="xPositionStart" value="0"><br>
+ Start Position y: <input type="text" id="yPositionStart" value="0"><br>
+ Start Direction:  <select id="dirStart">
+                      <option value="e">East</option>
+                      <option value="s">South</option>
+                      <option value="w">West</option>
+                      <option value="n">North</option>
+                    </select> 
+<br /><br />
+Add command: <br />
+Turn: <select id="turn">
+        <option value=""></option>
+        <option value="left">Left</option>
+        <option value="right">Right</option>
+      </select><button onclick="addTurn()">add</button><br>
+<br />
+Move forward step <input type="text" id="stepForward" value="0"><button onclick="addStep(1)">add</button><br>
+<br />
+Move backward step <input type="text" id="stepBackward" value="0"><button onclick="addStep(0)">add</button><br>
+<br />
+Command List: <textarea rows="4" cols="50" id="commandList"></textarea> <br />
+<br />
+<button onclick="startMove()">Move</button><br>
+<br /><br />
+End Position x: <input type="text" id="xPositionEnd" disabled><br /><br />
+End Position y: <input type="text" id="yPositionEnd" disabled><br /><br />
+End Direction:&nbsp;&nbsp;<input type="text" id="endDir" disabled><br /><br />
+</body>
+</html>
